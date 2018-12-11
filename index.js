@@ -36,14 +36,15 @@ professor.count().then(count => {
     }
 })
 
-
 // returns list of all the students filtered by the provided parameters
 app.get("/students", async (req, res) => {
-    // findAndCountAll{ offset: 20, limit: 1 }
-    if (Object.keys(req.query).length) { // for request query string
+    let pageSize = 20, pageNumber = 1;
+    let objKeys = Object.keys(req.query);
+
+    if (objKeys.length) { // for request query string
         let whereObj = {};
-        console.log(req.query)
-        if (Object.keys(req.query).indexOf("classes") !== -1) {
+
+        if (objKeys.indexOf("classes") !== -1) {
             let results = await studentClass.findAll({
                 attributes: ['roll_no'],
                 where: {
@@ -60,29 +61,50 @@ app.get("/students", async (req, res) => {
             }
         }
 
-        if (Object.keys(req.query).indexOf("active") !== -1) {
+        if (objKeys.indexOf("active") !== -1) {
             whereObj["active"] = req.query.active;
         }
 
-        // if (Object.keys(req.query).indexOf("pageSize") !== -1) {
-        //     whereObj["limit"] = req.query.pageSize;
-        // } else {
-        //     whereObj["limit"] = 20;
-        // }
+        if (objKeys.indexOf("pageSize") !== -1) {
+            pageSize = req.query.pageSize;
+        } else {
+            pageSize = 20;
+        }
 
-        // if (Object.keys(req.query).indexOf("pageNumber") !== -1) {
-        //     whereObj["offset"] = req.query.pageNumber;
-        // } else {
-        //     whereObj["offset"] = 0;
-        // }
-        
-        student.findAll({
-            where: whereObj
-        }).then(students => {
-            // if(Object.keys(req.query).indexOf("admissionYearAfter") !== -1) {
-            //     whereObj["admissionYearAfter"] = req.query.admissionYearAfter;
-            // }
-            return res.status(200).json(students);
+        if (objKeys.indexOf("pageNumber") !== -1) {
+            pageNumber = req.query.pageNumber;
+        } else {
+            pageNumber = 1;
+        }
+
+        student.findAndCountAll({
+            where: whereObj,
+            offset: ((pageNumber - 1) * pageSize),
+            limit: pageSize
+        }).then(resp => {
+            if (objKeys.indexOf("admissionYearAfter") !== -1) {
+                for (let i = 0; i < resp.rows.length; i++) {
+                    let currYear = new Date(resp.rows[i].admissionDate).getFullYear();
+                    if (currYear >= req.query.admissionYearAfter) {
+
+                    } else {
+                        resp.rows.splice(i, 1);
+                    }
+                }
+            } else if (objKeys.indexOf("admissionYearBefore") !== -1) {
+                for (let i = 0; i < resp.rows.length; i++) {
+                    let currYear = new Date(resp.rows[i].admissionDate).getFullYear();
+                    if (currYear < req.query.admissionYearBefore) {
+
+                    } else {
+                        resp.rows.splice(i, 1);
+                    }
+                }
+            }
+
+            resp["prevPage"] = ((pageNumber - 1) === 0) ? "" : pageNumber - 1;
+            resp["nextPage"] = pageNumber + 1;
+            return res.status(200).json(resp);
         }).catch(err => {
             return res.status(404).json({
                 message: err.message,
@@ -90,7 +112,9 @@ app.get("/students", async (req, res) => {
             });
         });
     } else {
-        student.findAndCountAll({ limit: 20 }).then(result => {
+        student.findAndCountAll({ offset: ((pageNumber - 1) * pageSize), limit: pageSize }).then(result => {
+            result["prevPage"] = ((pageNumber - 1) === 0) ? "" : pageNumber - 1;
+            result["nextPage"] = pageNumber + 1;
             return res.status(200).json(result);
         }).catch(err => {
             return res.status(404).json({
@@ -237,16 +261,13 @@ app.get("/classes", (req, res) => {
 
 // Add provided students to a semester class.
 app.post('/classes/:id/students', (req, res) => {
-    // student.create(req.body).then((result) => {
     studentClass.create({
-        // roll_no: result.dataValues.roll_no,
         roll_no: req.body.roll_no,
         classId: req.params.id
     }).then(resp => {
         return res.status(201).json({
             studentClass: resp.dataValues
         });
-        // })
     }).catch(err => {
         return res.status(404).json({
             message: err.message,
