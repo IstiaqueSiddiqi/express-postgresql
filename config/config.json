@@ -15,7 +15,7 @@
   },
   "production": {
     "username": "zcehngca",
-    "password": "QdZIrdyJiE-lztxuBEpejIWrZLb8Ap2",
+    "password": "qQdZIrdyJiE-lztxuBEpejIWrZLb8Ap2",
     "database": "zcehngca",
     "host": "baasu.db.elephantsql.com",
     "dialect": "postgres"
