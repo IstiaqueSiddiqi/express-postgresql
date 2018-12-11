@@ -14,10 +14,10 @@
     "dialect": "postgres"
   },
   "production": {
-    "username": "postgres",
-    "password": "admin",
-    "database": "pgdb",
-    "host": "127.0.0.1",
+    "username": "zcehngca",
+    "password": "QdZIrdyJiE-lztxuBEpejIWrZLb8Ap2",
+    "database": "zcehngca",
+    "host": "baasu.db.elephantsql.com",
     "dialect": "postgres"
   }
 }
