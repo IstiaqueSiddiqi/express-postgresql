@@ -1,4 +1,4 @@
-# Express-Postgresql REST APIs
+# Nodejs-Postgresql REST APIs
 REST API's using node.js, express.js, postgresql
 
 ## Overview
